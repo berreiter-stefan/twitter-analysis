@@ -3,10 +3,11 @@ Including utility classes and functions for
 encapsulating functionality to make communicating
 with the Twitter API easy.
 """
-from typing import Dict, Tuple, List, Any  # for type hinting
+from typing import Dict, List, Any  # for type hinting
 import time  # for pausing requests between tweets
 import requests  # For sending GET requests from the API
 from dotenv import dotenv_values  # to import environment variables
+from config import MINISTER_TWITTER_INFO
 
 env_vars = dotenv_values(".env")
 
@@ -21,7 +22,6 @@ class TwitterApiGetter:
 
     def get_all_minister_twitter_bios(
         self,
-        minister_twitter_info: Dict[str, Tuple[str, str]],
         custom_user_fields: List[str],
     ) -> List[Dict[str, Any]]:
         """calls a GET api for all ministers in scope and returns a list of dictionaries"""
@@ -29,7 +29,7 @@ class TwitterApiGetter:
         user_bio_url = "https://api.twitter.com/2/users/by"
         response_container = []
 
-        for party, minister_handle in minister_twitter_info.values():
+        for party, minister_handle in MINISTER_TWITTER_INFO.values():
             response = requests.request(
                 "GET",
                 user_bio_url,
@@ -46,6 +46,10 @@ class TwitterApiGetter:
                 raw_response_data["party"] = party
                 response_container.append(raw_response_data)
             time.sleep(0.2)
+        print(
+            f"INFO: {len(response_container)}/{len(MINISTER_TWITTER_INFO)} "
+            f"Twitter accounts of ministers with Twitter handles fetched."
+        )
         return response_container
 
     @staticmethod
