@@ -13,14 +13,6 @@ env_vars = dotenv_values(".env")
 TWITTER_API_BEARER_TOKEN = env_vars.get("TWITTER_API_BEARER_TOKEN")
 
 
-def account_info_params(twitter_handle: str, user_fields: List[str]) -> Dict[str, str]:
-    """builds together parameters for a GET api call to 'https://api.twitter.com/2/users/by'"""
-    return {
-        "usernames": f"{twitter_handle.lower()}",
-        "user.fields": f"{','.join(user_fields)}",
-    }
-
-
 def get_all_minister_twitter_bios(
     minister_twitter_info: Dict[str, Tuple[str, str]], custom_user_fields: List[str]
 ) -> List[Dict[str, Any]]:
@@ -28,6 +20,16 @@ def get_all_minister_twitter_bios(
     custom_headers = {"Authorization": f"Bearer {TWITTER_API_BEARER_TOKEN}"}
     user_bio_url = "https://api.twitter.com/2/users/by"
     response_container = []
+
+    def account_info_params(
+        twitter_handle: str, user_fields: List[str]
+    ) -> Dict[str, str]:
+        """builds together parameters for a GET api call to 'https://api.twitter.com/2/users/by'"""
+        return {
+            "usernames": f"{twitter_handle.lower()}",
+            "user.fields": f"{','.join(user_fields)}",
+        }
+
     for party, minister_handle in minister_twitter_info.values():
         response = requests.request(
             "GET",
