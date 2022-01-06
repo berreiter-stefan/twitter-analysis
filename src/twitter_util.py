@@ -3,7 +3,7 @@ Including utility classes and functions for
 encapsulating functionality to make communicating
 with the Twitter API easy.
 """
-from typing import Dict, List, Any, Union  # for type hinting
+from typing import Dict, List, Any  # for type hinting
 import time  # for pausing requests between tweets
 import requests  # For sending GET requests from the API
 from dotenv import dotenv_values  # to import environment variables
@@ -18,6 +18,7 @@ class TwitterApiGetter:
     TWITTER_API_URL = "https://api.twitter.com"
     TWITTER_API_BEARER_TOKEN = env_vars.get("TWITTER_API_BEARER_TOKEN")
     CUSTOM_HEADERS = {"Authorization": f"Bearer {TWITTER_API_BEARER_TOKEN}"}
+    MAX_TWEETS_PER_REQUEST = 100
     TIMESTAMP_STR_START_PANDEMIC = "2020-12-30T00:00:00Z"
 
     def __init__(self):
@@ -69,10 +70,13 @@ class TwitterApiGetter:
         user_id: int,
         user_name: str,
     ) -> List[Dict[str, Any]]:
-        """fetches all possible tweets of a user iteratively and stores tweets in a list and returns it in the end."""
+        """
+        fetches all possible tweets of a user iteratively and stores tweets in
+        a list and returns it in the end.
+        """
         params = {
             "start_time": self.TIMESTAMP_STR_START_PANDEMIC,
-            "max_results": 10,
+            "max_results": self.MAX_TWEETS_PER_REQUEST,
             # "exclude": "retweets",
             "expansions": "entities.mentions.username",
             "tweet.fields": "created_at,public_metrics",
@@ -90,7 +94,8 @@ class TwitterApiGetter:
             )
             if response.status_code != 200:
                 print(
-                    f"INFO [user {user_name} ❌]: Get request failed, not status code 200, but {response.status_code}."
+                    f"INFO [user {user_name} ❌]: Get request failed, not status code 200,"
+                    f" but {response.status_code}."
                 )
                 print(response.json())
                 break
@@ -114,7 +119,10 @@ class TwitterApiGetter:
 
             next_token = response.json()["meta"]["next_token"]
             params["pagination_token"] = next_token
-            if iter_cnt > 10:
+            if iter_cnt > 20:
+                print(
+                    "INFO ❌❌❌❌: Stopped because of reaching over 20 iterations for one user."
+                )
                 break
             time.sleep(0.25)
         return all_tweets_of_user
