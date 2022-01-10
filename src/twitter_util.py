@@ -19,7 +19,7 @@ class TwitterApiGetter:
     TWITTER_API_BEARER_TOKEN = env_vars.get("TWITTER_API_BEARER_TOKEN")
     CUSTOM_HEADERS = {"Authorization": f"Bearer {TWITTER_API_BEARER_TOKEN}"}
     MAX_TWEETS_PER_REQUEST = 100
-    TIMESTAMP_STR_START_PANDEMIC = "2020-12-30T00:00:00Z"
+    TIMESTAMP_STR_START_PANDEMIC = "2019-12-30T00:00:00Z"
 
     def __init__(self):
         pass
@@ -28,7 +28,21 @@ class TwitterApiGetter:
     def _account_info_params(
         twitter_handle: str, user_fields: List[str]
     ) -> Dict[str, str]:
-        """builds together parameters for a GET api call to 'https://api.twitter.com/2/users/by'"""
+        """builds together parameters for a GET api call to 'https://api.twitter.com/2/users/by'
+
+        Parameters
+        ----------
+        twitter_handle: str :
+            the handle of the twitter user @this_is_the_handle
+
+        user_fields: List[str] :
+            the user_fields which you want to write into the header
+
+
+        Returns
+        -------
+        Dict[str, str]
+        """
         return {
             "usernames": f"{twitter_handle.lower()}",
             "user.fields": f"{','.join(user_fields)}",
@@ -38,7 +52,19 @@ class TwitterApiGetter:
         self,
         custom_user_fields: List[str],
     ) -> List[Dict[str, Any]]:
-        """calls a GET api for all ministers in scope and returns a list of dictionaries"""
+        """calls a GET api for all ministers in scope and returns a list of dictionaries
+
+        Parameters
+        ----------
+        custom_user_fields: List[str] :
+            a list of strings (see api spec) which relate to the fields
+            which you want to get via your response
+
+
+        Returns
+        -------
+        List[Dict[str, Any]]
+        """
         user_bio_endpoint = f"{self.TWITTER_API_URL}/2/users/by"
         response_container = []
 
@@ -70,9 +96,22 @@ class TwitterApiGetter:
         user_id: int,
         user_name: str,
     ) -> List[Dict[str, Any]]:
-        """
-        fetches all possible tweets of a user iteratively and stores tweets in
+        """fetches all possible tweets of a user iteratively and stores tweets in
         a list and returns it in the end.
+
+        Parameters
+        ----------
+        user_id: int :
+            the twitter id of a certain user of interest
+
+        user_name: str :
+            the corresponding twitter user name
+
+
+        Returns
+        -------
+        List[Dict[str, Any]]
+
         """
         params = {
             "start_time": self.TIMESTAMP_STR_START_PANDEMIC,
@@ -119,9 +158,9 @@ class TwitterApiGetter:
 
             next_token = response.json()["meta"]["next_token"]
             params["pagination_token"] = next_token
-            if iter_cnt > 20:
+            if iter_cnt > 100:
                 print(
-                    "INFO ❌❌❌❌: Stopped because of reaching over 20 iterations for one user."
+                    f"INFO ❌❌: Stopped because of reaching {iter_cnt} iterations for one user"
                 )
                 break
             time.sleep(0.25)
